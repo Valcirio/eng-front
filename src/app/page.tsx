@@ -2,18 +2,18 @@
 import { commentValidation, type commentType } from '@/validations/comments'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import * as Container from './components/containers'
 import instance from './lib/axios'
+import { Label, StarRating } from './components/containers'
 
 export default function Home () {
-  const { watch, register, handleSubmit, formState: { errors, isSubmitting } } = useForm<commentType>({
+  const { watch, register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<commentType>({
     criteriaMode: 'all',
     mode: 'all',
     resolver: zodResolver(commentValidation),
     defaultValues: {
       name: '',
       comment: '',
-      star: 0
+      star: 5
     }
   })
 
@@ -25,43 +25,55 @@ export default function Home () {
         name: data.name,
         comment: data.comment,
         star: data.star
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json'
-        }
       })
-    console.log(result)
   }
-  console.log(errors)
 
   return (
-    <section className="w-screen min-h-screen overflow-hidden flex flex-col justify-center items-center">
-      <form onSubmit={handleSubmit(handleForm)} className="w-mobileForm md:w-webForm flex flex-col justify-center items-center gap-4">
-        <Container.Label htmlFor="name">
-          <p>Nome</p>
-          <input aria-invalid={!!errors.name?.message}
-          className='px-1 w-full border-2 rounded-md aria-[invalid=true]:border-red-600 focus:outline-none' id='name' type="text" {...register('name')} />
-          {!!errors.name?.message && <span>{errors.name.message}</span>}
-        </Container.Label>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <form onSubmit={handleSubmit(handleForm)} className="bg-white p-6 rounded-lg shadow-md w-full max-w-lg">
+        <h2 className="text-2xl font-bold mb-4 text-indigo-500">Deixe seu Comentário</h2>
 
-        <Container.Label htmlFor="comment">
-          <p>Comentário de Avaliação</p>
-          <textarea id='comment' aria-invalid={!!errors.comment?.message} spellCheck rows={6}
-          className='px-1 w-full border-2 rounded-md aria-[invalid=true]:border-red-600 focus:outline-none resize-none' {...register('comment')} />
-          {!!errors.comment?.message && <span>{errors.comment.message}</span>}
-        </Container.Label>
+        <Label htmlFor="name" className="block mb-4">
+          <span className="text-gray-700 text-base font-medium">Nome</span>
+          <input
+            id="name"
+            type="text"
+            className={`mt-1 block w-full px-3 py-2 bg-white border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black`}
+            {...register('name')}
+          />
+          {!!errors.name?.message && <span className="text-red-600">{errors.name.message}</span>}
+        </Label>
 
-        <Container.Label htmlFor="star">
-          <p>Nota de Avalicação</p>
-          <p>{valueStar}</p>
-          <input id='star' type="range" min={0} max={5} step={0.1} className='max-w-xs w-full'
-          {...register('star', { valueAsNumber: true })} />
-          {!!errors.star?.message && <span>{errors.star.message}</span>}
-        </Container.Label>
+        <Label htmlFor="comment" className="block mb-4">
+          <span className="text-gray-700 text-base font-medium">Comentário de Avaliação</span>
+          <textarea
+            id="comment"
+            aria-invalid={!!errors.comment?.message}
+            spellCheck
+            rows={6}
+            className={`mt-1 block w-full px-3 py-2 bg-white border ${errors.comment ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm resize-none text-black`}
+            {...register('comment')}
+          />
+          {!!errors.comment?.message && <span className="text-red-600">{errors.comment.message}</span>}
+        </Label>
 
-        <button type="submit" >Enviar Avaliação</button>
+        <Label htmlFor="star" className="block mb-4">
+          <span className="text-gray-700 text-base font-medium">Nota de Avaliação</span>
+          <StarRating
+            value={valueStar}
+            onChange={(rating) => setValue('star', rating)}
+          />
+          {!!errors.star?.message && <span className="text-red-600">{errors.star.message}</span>}
+        </Label>
+
+        <button
+          type="submit"
+          className="w-full bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mt-4"
+          disabled={isSubmitting}
+        >
+          Enviar Avaliação
+        </button>
       </form>
-    </section>
+    </div>
   )
 }
