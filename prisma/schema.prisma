@@ -1,29 +1,308 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
-model Products {
-  id       String     @id @default(uuid())
-  title    String
-  Comments Comments[]
+model AVALIACAO_PEDIDO {
+  COD_AVALIACAO_PEDIDO Int     @id
+  NUM_NOTA_AVALIACAO   Int?
+  TXT_AVALIACAO        String? @db.VarChar(100)
+  COD_PEDIDO           Int
+  COD_CLIENTE          Int
+  CLIENTE              CLIENTE @relation(fields: [COD_CLIENTE], references: [COD_CLIENTE], onDelete: NoAction, onUpdate: NoAction, map: "fk_AVALIACAO_PEDIDO_CLIENTE1")
+  PEDIDO               PEDIDO  @relation(fields: [COD_PEDIDO], references: [COD_PEDIDO], onDelete: NoAction, onUpdate: NoAction, map: "fk_AVALIACAO_PEDIDO_PEDIDO1")
+
+  @@index([COD_CLIENTE], map: "fk_AVALIACAO_PEDIDO_CLIENTE1_idx")
+  @@index([COD_PEDIDO], map: "fk_AVALIACAO_PEDIDO_PEDIDO1_idx")
 }
 
-model Comments {
-  id        Int      @id @default(autoincrement())
-  name      String?
-  comment   String
-  star      Decimal
-  Product   Products @relation(fields: [productId], references: [id])
-  productId String
+model BAIRRO {
+  COD_BAIRRO     Int              @id
+  DCR_BAIRRO     String?          @db.VarChar(45)
+  COD_CIDADE     Int
+  CIDADE         CIDADE           @relation(fields: [COD_CIDADE], references: [COD_CIDADE], onDelete: NoAction, onUpdate: NoAction, map: "fk_BAIRRO_CIDADE1")
+  CLIENTE        CLIENTE[]
+  EMPREENDIMENTO EMPREENDIMENTO[]
+  ENTREGA        ENTREGA[]
+  LOCALIDADE     LOCALIDADE[]
+
+  @@index([COD_CIDADE], map: "fk_BAIRRO_CIDADE1_idx")
+}
+
+model CARDAPIO {
+  COD_CARDAPIO      Int              @id
+  DCR_CARDAPIO      String?          @db.VarChar(45)
+  DCR_TITULO_APRES  String?          @db.VarChar(45)
+  COD_EMPREEDIMENTO Int
+  EMPREENDIMENTO    EMPREENDIMENTO   @relation(fields: [COD_EMPREEDIMENTO], references: [COD_EMPREEDIMENTO], onDelete: NoAction, onUpdate: NoAction, map: "fk_CARDAPIO_EMPREENDIMENTO1")
+  SECAO_CARDAPIO    SECAO_CARDAPIO[]
+
+  @@index([COD_EMPREEDIMENTO], map: "fk_CARDAPIO_EMPREENDIMENTO1_idx")
+}
+
+model CATEGORIA {
+  COD_CATEGORIA     Int            @id
+  DCR_CATEGORIA     String?        @db.VarChar(45)
+  IMG_CATEGORIA     Bytes?         @db.MediumBlob
+  COD_EMPREEDIMENTO Int
+  EMPREENDIMENTO    EMPREENDIMENTO @relation(fields: [COD_EMPREEDIMENTO], references: [COD_EMPREEDIMENTO], onDelete: NoAction, onUpdate: NoAction, map: "fk_CATEGORIA_EMPREENDIMENTO1")
+  PRODUTO           PRODUTO[]
+
+  @@index([COD_EMPREEDIMENTO], map: "fk_CATEGORIA_EMPREENDIMENTO1_idx")
+}
+
+model CIDADE {
+  COD_CIDADE     Int              @id
+  DCR_CIDADE     String?          @db.VarChar(45)
+  BAIRRO         BAIRRO[]
+  CLIENTE        CLIENTE[]
+  EMPREENDIMENTO EMPREENDIMENTO[]
+  ENTREGA        ENTREGA[]
+}
+
+model CLIENTE {
+  COD_CLIENTE      Int                @id
+  NOME_CLIENTE     String?            @db.VarChar(45)
+  DCR_ENDERECO     String?            @db.VarChar(45)
+  DCR_COMPLEMENTO  String?            @db.VarChar(45)
+  NUM_CEP          String?            @db.VarChar(10)
+  COD_CIDADE       Int
+  COD_BAIRRO       Int
+  COD_LOCALIDADE   Int
+  AVALIACAO_PEDIDO AVALIACAO_PEDIDO[]
+  BAIRRO           BAIRRO             @relation(fields: [COD_BAIRRO], references: [COD_BAIRRO], onDelete: NoAction, onUpdate: NoAction, map: "fk_CLIENTE_BAIRRO1")
+  CIDADE           CIDADE             @relation(fields: [COD_CIDADE], references: [COD_CIDADE], onDelete: NoAction, onUpdate: NoAction, map: "fk_CLIENTE_CIDADE1")
+  LOCALIDADE       LOCALIDADE         @relation(fields: [COD_LOCALIDADE], references: [COD_LOCALIDADE], onDelete: NoAction, onUpdate: NoAction, map: "fk_CLIENTE_LOCALIDADE1")
+  PEDIDO           PEDIDO[]
+
+  @@index([COD_BAIRRO], map: "fk_CLIENTE_BAIRRO1_idx")
+  @@index([COD_CIDADE], map: "fk_CLIENTE_CIDADE1_idx")
+  @@index([COD_LOCALIDADE], map: "fk_CLIENTE_LOCALIDADE1_idx")
+}
+
+model DISPONIBILIDADE {
+  COD_DISPONIBILIDADE Int            @id
+  NUM_DIA_SEMANA      Int?
+  HORA_FIM            DateTime?      @db.DateTime(0)
+  HORA_INICIO         DateTime?      @db.DateTime(0)
+  COD_LOCALIDADE      Int
+  COD_EMPREEDIMENTO   Int
+  EMPREENDIMENTO      EMPREENDIMENTO @relation(fields: [COD_EMPREEDIMENTO], references: [COD_EMPREEDIMENTO], onDelete: NoAction, onUpdate: NoAction, map: "fk_DISPONIBILIDADE_EMPREENDIMENTO1")
+  LOCALIDADE          LOCALIDADE     @relation(fields: [COD_LOCALIDADE], references: [COD_LOCALIDADE], onDelete: NoAction, onUpdate: NoAction, map: "fk_DISPONIBILIDADE_LOCALIDADE1")
+
+  @@index([COD_EMPREEDIMENTO], map: "fk_DISPONIBILIDADE_EMPREENDIMENTO1_idx")
+  @@index([COD_LOCALIDADE], map: "fk_DISPONIBILIDADE_LOCALIDADE1_idx")
+}
+
+model DISPON_EXCECAO {
+  COD_DISPON_EXCECAO Int            @id
+  DATA_EXCECAO       DateTime?      @db.DateTime(0)
+  TIP_EXCECAO        String?        @db.Char(1)
+  HORA_INICIO        DateTime?      @db.DateTime(0)
+  HORA_FIM           DateTime?      @db.DateTime(0)
+  COD_EMPREEDIMENTO  Int
+  COD_LOCALIDADE     Int
+  EMPREENDIMENTO     EMPREENDIMENTO @relation(fields: [COD_EMPREEDIMENTO], references: [COD_EMPREEDIMENTO], onDelete: NoAction, onUpdate: NoAction, map: "fk_DISPON_EXCECAO_EMPREENDIMENTO1")
+  LOCALIDADE         LOCALIDADE     @relation(fields: [COD_LOCALIDADE], references: [COD_LOCALIDADE], onDelete: NoAction, onUpdate: NoAction, map: "fk_DISPON_EXCECAO_LOCALIDADE1")
+
+  @@index([COD_EMPREEDIMENTO], map: "fk_DISPON_EXCECAO_EMPREENDIMENTO1_idx")
+  @@index([COD_LOCALIDADE], map: "fk_DISPON_EXCECAO_LOCALIDADE1_idx")
+}
+
+model EMPREENDIMENTO {
+  COD_EMPREEDIMENTO   Int                   @id
+  DCR_EMPREENDIMENTO  String?               @db.VarChar(45)
+  DCR_NOME_FANTASIA   String?               @db.VarChar(45)
+  DCR_ENDERECO        String?               @db.VarChar(45)
+  DCR_COMPLEMENTO     String?               @db.VarChar(45)
+  NUM_CEP             String?               @db.VarChar(10)
+  COD_CIDADE          Int
+  BAIRRO_COD_BAIRRO   Int
+  COD_LOCALIDADE      Int
+  IMG_EMPREENDIMENTO  Bytes?                @db.MediumBlob
+  CARDAPIO            CARDAPIO[]
+  CATEGORIA           CATEGORIA[]
+  DISPONIBILIDADE     DISPONIBILIDADE[]
+  DISPON_EXCECAO      DISPON_EXCECAO[]
+  BAIRRO              BAIRRO                @relation(fields: [BAIRRO_COD_BAIRRO], references: [COD_BAIRRO], onDelete: NoAction, onUpdate: NoAction, map: "fk_EMPREENDIMENTO_BAIRRO1")
+  CIDADE              CIDADE                @relation(fields: [COD_CIDADE], references: [COD_CIDADE], onDelete: NoAction, onUpdate: NoAction, map: "fk_EMPREENDIMENTO_CIDADE")
+  LOCALIDADE          LOCALIDADE            @relation(fields: [COD_LOCALIDADE], references: [COD_LOCALIDADE], onDelete: NoAction, onUpdate: NoAction, map: "fk_EMPREENDIMENTO_LOCALIDADE1")
+  EMPREND_FUNCIONARIO EMPREND_FUNCIONARIO[]
+  PRODUTO             PRODUTO[]
+
+  @@index([BAIRRO_COD_BAIRRO], map: "fk_EMPREENDIMENTO_BAIRRO1_idx")
+  @@index([COD_CIDADE], map: "fk_EMPREENDIMENTO_CIDADE_idx")
+  @@index([COD_LOCALIDADE], map: "fk_EMPREENDIMENTO_LOCALIDADE1_idx")
+}
+
+model EMPREND_FUNCIONARIO {
+  COD_EMPREEND_FUNCIONARIO Int            @id
+  TIP_FUNCIONARIO          String?        @db.Char(1)
+  COD_EMPREEDIMENTO        Int
+  COD_FUNCIONARIO          Int
+  IMG_EMPREEND_FUNCIONARIO Bytes?         @db.MediumBlob
+  EMPREENDIMENTO           EMPREENDIMENTO @relation(fields: [COD_EMPREEDIMENTO], references: [COD_EMPREEDIMENTO], onDelete: NoAction, onUpdate: NoAction, map: "fk_EMPREND_FUNCIONARIO_EMPREENDIMENTO1")
+  FUNCIONARIO              FUNCIONARIO    @relation(fields: [COD_FUNCIONARIO], references: [COD_FUNCIONARIO], onDelete: NoAction, onUpdate: NoAction, map: "fk_EMPREND_FUNCIONARIO_FUNCIONARIO1")
+
+  @@index([COD_EMPREEDIMENTO], map: "fk_EMPREND_FUNCIONARIO_EMPREENDIMENTO1_idx")
+  @@index([COD_FUNCIONARIO], map: "fk_EMPREND_FUNCIONARIO_FUNCIONARIO1_idx")
+}
+
+model ENTREGA {
+  COD_ENTREGA     Int         @id
+  COD_PEDIDO      Int
+  COD_FUNCIONARIO Int
+  DATA_SAIDA      DateTime?   @db.DateTime(0)
+  DATA_ENTREGA    DateTime?   @db.DateTime(0)
+  VLR_ENTREGA     Decimal?    @db.Decimal(9, 2)
+  DCR_ENDERECO    String?     @db.VarChar(45)
+  DCR_COMPLEM     String?     @db.VarChar(45)
+  NUM_CEP         String?     @db.VarChar(10)
+  TXT_REFERENCIA  String?     @db.VarChar(45)
+  COD_CIDADE      Int
+  COD_BAIRRO      Int
+  COD_LOCALIDADE  Int
+  FLAG_ENCOMENDA  String?     @db.Char(1)
+  FLAG_ENTREGADOR String?     @db.Char(1)
+  BAIRRO          BAIRRO      @relation(fields: [COD_BAIRRO], references: [COD_BAIRRO], onDelete: NoAction, onUpdate: NoAction, map: "fk_ENTREGA_BAIRRO1")
+  CIDADE          CIDADE      @relation(fields: [COD_CIDADE], references: [COD_CIDADE], onDelete: NoAction, onUpdate: NoAction, map: "fk_ENTREGA_CIDADE1")
+  FUNCIONARIO     FUNCIONARIO @relation(fields: [COD_FUNCIONARIO], references: [COD_FUNCIONARIO], onDelete: NoAction, onUpdate: NoAction, map: "fk_ENTREGA_FUNCIONARIO1")
+  LOCALIDADE      LOCALIDADE  @relation(fields: [COD_LOCALIDADE], references: [COD_LOCALIDADE], onDelete: NoAction, onUpdate: NoAction, map: "fk_ENTREGA_LOCALIDADE1")
+  PEDIDO          PEDIDO      @relation(fields: [COD_PEDIDO], references: [COD_PEDIDO], onDelete: NoAction, onUpdate: NoAction, map: "fk_ENTREGA_PEDIDO1")
+
+  @@index([COD_BAIRRO], map: "fk_ENTREGA_BAIRRO1_idx")
+  @@index([COD_CIDADE], map: "fk_ENTREGA_CIDADE1_idx")
+  @@index([COD_FUNCIONARIO], map: "fk_ENTREGA_FUNCIONARIO1_idx")
+  @@index([COD_LOCALIDADE], map: "fk_ENTREGA_LOCALIDADE1_idx")
+  @@index([COD_PEDIDO], map: "fk_ENTREGA_PEDIDO1_idx")
+}
+
+model EVENTO {
+  COD_EVENTO          Int                   @id
+  DCR_EVENTO          String?               @db.VarChar(45)
+  NUM_ORDEM_EVENTO    Int?
+  RASTREAMENTO_PEDIDO RASTREAMENTO_PEDIDO[]
+}
+
+model FORMA_PAGTO {
+  COD_FORMA_PAGTO Int      @id
+  DCR_FORMA_PAGTO String?  @db.VarChar(45)
+  PEDIDO          PEDIDO[]
+}
+
+model FUNCIONARIO {
+  COD_FUNCIONARIO     Int                   @id
+  NOME_FUNCIONARIO    String?               @db.VarChar(45)
+  NUM_TELEFONE        String?               @db.VarChar(15)
+  DCR_EMAIL           String?               @db.VarChar(45)
+  EMPREND_FUNCIONARIO EMPREND_FUNCIONARIO[]
+  ENTREGA             ENTREGA[]
+}
+
+model ITEM_PEDIDO {
+  COD_ITEM_PEDIDO Int      @id
+  VLR_PRODUTO     Decimal? @db.Decimal(9, 2)
+  QTD_PRODUTO     Decimal? @db.Decimal(9, 2)
+  VLR_TOTAL       Decimal? @db.Decimal(9, 2)
+  COD_PEDIDO      Int
+  COD_PRODUTO     Int
+  PEDIDO          PEDIDO   @relation(fields: [COD_PEDIDO], references: [COD_PEDIDO], onDelete: NoAction, onUpdate: NoAction, map: "fk_ITEM_PEDIDO_PEDIDO1")
+  PRODUTO         PRODUTO  @relation(fields: [COD_PRODUTO], references: [COD_PRODUTO], onDelete: NoAction, onUpdate: NoAction, map: "fk_ITEM_PEDIDO_PRODUTO1")
+
+  @@index([COD_PEDIDO], map: "fk_ITEM_PEDIDO_PEDIDO1_idx")
+  @@index([COD_PRODUTO], map: "fk_ITEM_PEDIDO_PRODUTO1_idx")
+}
+
+model LOCALIDADE {
+  COD_LOCALIDADE            Int               @id
+  DCR_LOCALIDADE            String?           @db.VarChar(45)
+  COD_BAIRRO                Int
+  LOCALIDADE_COD_LOCALIDADE Int
+  CLIENTE                   CLIENTE[]
+  DISPONIBILIDADE           DISPONIBILIDADE[]
+  DISPON_EXCECAO            DISPON_EXCECAO[]
+  EMPREENDIMENTO            EMPREENDIMENTO[]
+  ENTREGA                   ENTREGA[]
+  BAIRRO                    BAIRRO            @relation(fields: [COD_BAIRRO], references: [COD_BAIRRO], onDelete: NoAction, onUpdate: NoAction, map: "fk_LOCALIDADE_BAIRRO1")
+  LOCALIDADE                LOCALIDADE        @relation("LOCALIDADEToLOCALIDADE", fields: [LOCALIDADE_COD_LOCALIDADE], references: [COD_LOCALIDADE], onDelete: NoAction, onUpdate: NoAction, map: "fk_LOCALIDADE_LOCALIDADE1")
+  other_LOCALIDADE          LOCALIDADE[]      @relation("LOCALIDADEToLOCALIDADE")
+
+  @@index([COD_BAIRRO], map: "fk_LOCALIDADE_BAIRRO1_idx")
+  @@index([LOCALIDADE_COD_LOCALIDADE], map: "fk_LOCALIDADE_LOCALIDADE1_idx")
+}
+
+model PEDIDO {
+  COD_PEDIDO          Int                   @id
+  TIP_PEDIDO          String?               @db.Char(1)
+  DATA_PEDIDO         DateTime?             @db.DateTime(0)
+  VLR_PEDIDO          Decimal?              @db.Decimal(9, 2)
+  COD_CLIENTE         Int
+  COD_FORMA_PAGTO     Int?
+  DCR_DADOS_PAGTO     String?               @db.VarChar(200)
+  AVALIACAO_PEDIDO    AVALIACAO_PEDIDO[]
+  ENTREGA             ENTREGA[]
+  ITEM_PEDIDO         ITEM_PEDIDO[]
+  CLIENTE             CLIENTE               @relation(fields: [COD_CLIENTE], references: [COD_CLIENTE], onDelete: NoAction, onUpdate: NoAction, map: "fk_PEDIDO_CLIENTE1")
+  FORMA_PAGTO         FORMA_PAGTO?          @relation(fields: [COD_FORMA_PAGTO], references: [COD_FORMA_PAGTO], onDelete: NoAction, onUpdate: NoAction, map: "fk_PEDIDO_FORMA_PAGTO1")
+  RASTREAMENTO_PEDIDO RASTREAMENTO_PEDIDO[]
+
+  @@index([COD_CLIENTE], map: "fk_PEDIDO_CLIENTE1_idx")
+  @@index([COD_FORMA_PAGTO], map: "fk_PEDIDO_FORMA_PAGTO1_idx")
+}
+
+model PRODUTO {
+  COD_PRODUTO       Int             @id
+  DCR_PRODUTO       String?         @db.VarChar(45)
+  IMG_PRODUTO       Bytes?          @db.MediumBlob
+  VLR_PRODUTO       Decimal?        @db.Decimal(9, 2)
+  FLAG_DISPONIVEL   String?         @db.Char(1)
+  COD_CATEGORIA     Int
+  COD_EMPREEDIMENTO Int
+  ITEM_PEDIDO       ITEM_PEDIDO[]
+  CATEGORIA         CATEGORIA       @relation(fields: [COD_CATEGORIA], references: [COD_CATEGORIA], onDelete: NoAction, onUpdate: NoAction, map: "fk_PRODUTO_CATEGORIA1")
+  EMPREENDIMENTO    EMPREENDIMENTO  @relation(fields: [COD_EMPREEDIMENTO], references: [COD_EMPREEDIMENTO], onDelete: NoAction, onUpdate: NoAction, map: "fk_PRODUTO_EMPREENDIMENTO1")
+  SECAO_PRODUTO     SECAO_PRODUTO[]
+
+  @@index([COD_CATEGORIA], map: "fk_PRODUTO_CATEGORIA1_idx")
+  @@index([COD_EMPREEDIMENTO], map: "fk_PRODUTO_EMPREENDIMENTO1_idx")
+}
+
+model RASTREAMENTO_PEDIDO {
+  COD_RASTREAMENTO_PEDIDO Int       @id
+  COD_PEDIDO              Int
+  COD_EVENTO_PEDIDO       Int
+  DATA_HORA_EVENTO        DateTime? @db.DateTime(0)
+  EVENTO                  EVENTO    @relation(fields: [COD_EVENTO_PEDIDO], references: [COD_EVENTO], onDelete: NoAction, onUpdate: NoAction, map: "fk_RASTREAMENTO_PEDIDO_EVENTO_PEDIDO1")
+  PEDIDO                  PEDIDO    @relation(fields: [COD_PEDIDO], references: [COD_PEDIDO], onDelete: NoAction, onUpdate: NoAction, map: "fk_RASTREAMENTO_PEDIDO_PEDIDO1")
+
+  @@index([COD_EVENTO_PEDIDO], map: "fk_RASTREAMENTO_PEDIDO_EVENTO_PEDIDO1_idx")
+  @@index([COD_PEDIDO], map: "fk_RASTREAMENTO_PEDIDO_PEDIDO1_idx")
+}
+
+model SECAO_CARDAPIO {
+  COD_SECAO_CARDAPIO Int             @id
+  DCR_SECAO_CARDAPIO String?         @db.VarChar(45)
+  DCR_TITULO_APRES   String?         @db.VarChar(45)
+  COD_CARDAPIO       Int
+  NUM_ORDEM          Int?
+  CARDAPIO           CARDAPIO        @relation(fields: [COD_CARDAPIO], references: [COD_CARDAPIO], onDelete: NoAction, onUpdate: NoAction, map: "fk_SECAO_CARDAPIO_CARDAPIO1")
+  SECAO_PRODUTO      SECAO_PRODUTO[]
+
+  @@index([COD_CARDAPIO], map: "fk_SECAO_CARDAPIO_CARDAPIO1_idx")
+}
+
+model SECAO_PRODUTO {
+  COD_SECAO_PRODUTO                 String         @id @db.VarChar(45)
+  PRODUTO_COD_PRODUTO               Int
+  SECAO_CARDAPIO_COD_SECAO_CARDAPIO Int
+  NUM_ORDEM                         String?        @db.VarChar(45)
+  PRODUTO                           PRODUTO        @relation(fields: [PRODUTO_COD_PRODUTO], references: [COD_PRODUTO], onDelete: NoAction, onUpdate: NoAction, map: "fk_SECAO_PRODUTO_PRODUTO1")
+  SECAO_CARDAPIO                    SECAO_CARDAPIO @relation(fields: [SECAO_CARDAPIO_COD_SECAO_CARDAPIO], references: [COD_SECAO_CARDAPIO], onDelete: NoAction, onUpdate: NoAction, map: "fk_SECAO_PRODUTO_SECAO_CARDAPIO1")
+
+  @@index([PRODUTO_COD_PRODUTO], map: "fk_SECAO_PRODUTO_PRODUTO1_idx")
+  @@index([SECAO_CARDAPIO_COD_SECAO_CARDAPIO], map: "fk_SECAO_PRODUTO_SECAO_CARDAPIO1_idx")
 }

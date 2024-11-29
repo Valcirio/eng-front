@@ -1,17 +1,18 @@
-import { prisma } from '@/app/lib/client'
-import { type commentTypeAPI } from '@/app/types/api'
-import { HTTP } from '@/app/types/magicNumbers'
+import { prisma } from '@/lib/client'
+import { type commentTypeAPI } from '@/types/api'
+import { HTTP } from '@/types/magicNumbers'
 import { type NextRequest } from 'next/server'
 
 export async function POST (req: NextRequest) {
   const reqResult: commentTypeAPI = await req.json()
-
-  const resultDB = await prisma.comments.create({
+  const length = await prisma.aVALIACAO_PEDIDO.findMany()
+  const resultDB = await prisma.aVALIACAO_PEDIDO.create({
     data: {
-      name: reqResult.name,
-      comment: reqResult.comment,
-      star: reqResult.star,
-      productId: reqResult.productId
+      COD_AVALIACAO_PEDIDO: length.length + 1,
+      COD_CLIENTE: 2,
+      NUM_NOTA_AVALIACAO: reqResult.star,
+      TXT_AVALIACAO: reqResult.comment,
+      COD_PEDIDO: reqResult.productId
     }
   })
   console.log(resultDB)
